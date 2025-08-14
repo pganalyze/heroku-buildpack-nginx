@@ -12,10 +12,12 @@ set -eu
 NGINX_VERSION=${NGINX_VERSION-1.28.0}
 HEADERS_MORE_VERSION=${HEADERS_MORE_VERSION-0.38}
 UUID4_VERSION=${UUID4_VERSION-f8f7ff44e6a8c6cf75232ae4b63d011f2f3b34c1}
+NJS_VERSION=${NJS_VERSION-0.9.1}
 
 nginx_tarball_url=https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
 headers_more_nginx_module_url=https://github.com/openresty/headers-more-nginx-module/archive/v${HEADERS_MORE_VERSION}.tar.gz
 uuid4_url=https://github.com/cybozu/nginx-uuid4-module/archive/${UUID4_VERSION}.tar.gz
+njs_url=https://github.com/nginx/njs/archive/refs/tags/${NJS_VERSION}.tar.gz
 
 temp_dir=$(mktemp -d /tmp/nginx.XXXXXXXXXX)
 
@@ -31,6 +33,9 @@ curl -sSL "$headers_more_nginx_module_url" | tar xvz -C "nginx-${NGINX_VERSION}"
 echo "Downloading $uuid4_url"
 curl -sSL "$uuid4_url" | tar xvz -C "nginx-${NGINX_VERSION}"
 
+echo "Downloading $njs_url"
+curl -sSL "$njs_url" | tar xvz -C "nginx-${NGINX_VERSION}"
+
 configure_opts=(
   --with-pcre
   --with-http_gzip_static_module
@@ -38,6 +43,7 @@ configure_opts=(
   --with-http_ssl_module
   --add-module="${temp_dir}/nginx-${NGINX_VERSION}/headers-more-nginx-module-${HEADERS_MORE_VERSION}"
   --add-module="${temp_dir}/nginx-${NGINX_VERSION}/nginx-uuid4-module-${UUID4_VERSION}"
+  --add-module="${temp_dir}/nginx-${NGINX_VERSION}/njs-module-${NJS_VERSION}"
 )
 if [[ $STACK == "heroku-22" ]]; then
   # we used to build our own PCRE 8.x, and when moving to dynamic linking, we had to ensure all existing regexes in config files continued to work, so we enforced libpcre3 (8.x) usage instead of the newer PCRE2 (10.x), which has stricter validation for certain patterns (example: /[\w-.]/ is not allowed in PCRE2)
